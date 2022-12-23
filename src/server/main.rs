@@ -3,11 +3,12 @@ use concrete::{generate_keys, set_server_key, ConfigBuilder, FheBool};
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Result, Value};
 use std::net::TcpListener;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, mpsc};
 use std::thread;
 use tungstenite;
 use tungstenite::Message;
 use tungstenite::Message::*;
+use std::fs;
 
 const SIZE: usize = 561;
 const N_THREADS: u8 = 8;
@@ -18,10 +19,7 @@ enum ServerState {
     AwaitingMove,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-struct Position {
-    bitboards: Map<String, Value>,
-}
+type Position = Bitboard;
 
 #[derive(Serialize, Deserialize)]
 struct PieceType {
@@ -45,16 +43,19 @@ enum Colour {
     White,
 }
 
-#[derive(Serialize, Deserialize)]
-struct BitBoard {
+#[derive(Serialize, Deserialize, Debug)]
+struct Bitboard {
     data: Vec<bool>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 enum ChessMessage {
     StreamMove { identifier: u8, movement: Move },
-    ReadEvaluations,
+    ReadEvaluations, // Remove me, only use the below
+    EvaluationResult { identifier: u8, evaluation: Evaluation }
 }
+
+type Evaluation = i8;
 
 #[derive(Serialize, Deserialize, Debug)]
 struct Move {
@@ -75,11 +76,16 @@ fn main() {
             }
         })
     );
+
+    let weights = fs::read_to_string("weights.json").unwrap();
+    let weights: Vec<i8> = serde_json::from_str(&weights).unwrap();
     let server = TcpListener::bind("0.0.0.0:8085").unwrap();
+
     for stream in server.incoming() {
         let stream = stream.unwrap();
         thread::spawn(move || {
             let websocket = tungstenite::accept(stream);
+            let (transmitter, receiver) = mpsc::channel::<ChessMessage>();
             match websocket {
                 Err(msg) => {
                     println!("Error while accepting websocket connection: {}", msg);
@@ -96,11 +102,17 @@ fn main() {
                         println!("Verbose: {:?}", data);
                         let message = data.unwrap();
                         match message {
-                            ChessMessage::StreamMove { .. } => {}
+                            ChessMessage::StreamMove { .. } => {
+                                let evaluations: Vec<ChessMessage> = receiver.try_iter().collect();
+                                let response = serde_json::to_string(&evaluations).unwrap();
+                                websocket.write_message(Text(response));
+                            }
                             ChessMessage::ReadEvaluations => {
                                 let response = serde_json::to_string(&vec![1, 2, 3]).unwrap();
                                 websocket.write_message(Text(response));
                             }
+
+                            _ => {}
                         }
                     }
                 },
