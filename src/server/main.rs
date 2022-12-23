@@ -62,7 +62,10 @@ struct Move {
 }
 
 fn main() {
-    println!("{:?}", serde_json::to_string(&ChessMessage::ReadEvaluations));
+    println!(
+        "{:?}",
+        serde_json::to_string(&ChessMessage::ReadEvaluations)
+    );
     println!(
         "{:?}",
         serde_json::to_string(&ChessMessage::StreamMove {
@@ -82,27 +85,25 @@ fn main() {
                     println!("Error while accepting websocket connection: {}", msg);
                 }
 
-                Ok(mut websocket) => {
-                    loop {
-                        let message = websocket.read_message().unwrap();
-                        if let Text(json) = message {
-                            let data: Result<ChessMessage> = serde_json::from_str(&json);
-                            if let Err(msg) = data {
-                                println!("Malformed data: {}", msg);
-                                continue;
-                            } 
-                            println!("Verbose: {:?}", data);
-                            let message = data.unwrap();
-                            match message {
-                                ChessMessage::StreamMove { .. } => {},
-                                ChessMessage::ReadEvaluations => {
-                                    let response= serde_json::to_string(&vec![1,2,3]).unwrap();
-                                    websocket.write_message(Text(response));
-                                }
+                Ok(mut websocket) => loop {
+                    let message = websocket.read_message().unwrap();
+                    if let Text(json) = message {
+                        let data: Result<ChessMessage> = serde_json::from_str(&json);
+                        if let Err(msg) = data {
+                            println!("Malformed data: {}", msg);
+                            continue;
+                        }
+                        println!("Verbose: {:?}", data);
+                        let message = data.unwrap();
+                        match message {
+                            ChessMessage::StreamMove { .. } => {}
+                            ChessMessage::ReadEvaluations => {
+                                let response = serde_json::to_string(&vec![1, 2, 3]).unwrap();
+                                websocket.write_message(Text(response));
                             }
                         }
                     }
-                }
+                },
             }
         });
     }
