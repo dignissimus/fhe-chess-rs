@@ -6,12 +6,13 @@ edition = "2021"
 [lib]
 
 [dependencies]
-concrete = { version = "0.2.1", features = [ "booleans" ] }
+concrete = { version = "0.2.1", features = [ "booleans", "shortints", "integers" ] }
 tungstenite = "0.18.0"
 serde_json = "1.0.91"
 serde = "1.0.151"
 url = "2.3.1"
 chess = "3.2.0"
+criterion = "0.4.0"
 
 [[bin]]
 name = "fhe-server"
@@ -21,8 +22,15 @@ path = "src/fhe-server/main.rs"
 name = "clear-server"
 path = "src/clear-server/main.rs"
 
+[[bin]]
+name = "fhe-bench"
+path = "src/fhe-bench/bench.rs"
 
 [[bin]]
-name = "client"
-path = "src/client/main.rs"
+name = "fhe-client"
+path = "src/fhe-client/main.rs"
+
+[[bin]]
+name = "clear-client"
+path = "src/clear-client/main.rs"
 
