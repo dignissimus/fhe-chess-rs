@@ -10,6 +10,8 @@ concrete = { version = "0.2.1", features = [ "booleans" ] }
 tungstenite = "0.18.0"
 serde_json = "1.0.91"
 serde = "1.0.151"
+url = "2.3.1"
+chess = "3.2.0"
 
 [[bin]]
 name = "server"
