@@ -20,16 +20,15 @@ fn main() {
     for line in io::stdin().lock().lines() {
         // let board = Board::default();
         let board = Board::from_fen(line.unwrap());
-        if let None = board {
+        if board.is_none() {
             println!("Invalid FEN");
         }
         let board = board.unwrap();
         let position = Position::from_board(board);
 
         println!("Sending data");
-        let message = StreamPosition {
-            identifier: 0,
-            position,
+        let message = StreamPositions {
+            positions: vec![(0, position)]
         };
         let serialised = serde_json::to_string(&message).unwrap();
         websocket.write_message(Text(serialised)).unwrap();

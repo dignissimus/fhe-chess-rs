@@ -40,6 +40,9 @@ pub enum ChessMessage {
         identifier: u8,
         position: Position,
     },
+    StreamPositions {
+        positions: Vec<(u8, Position)>
+    },
     ReadEvaluations, // Remove me, only use the below
     EvaluationResult {
         identifier: u8,

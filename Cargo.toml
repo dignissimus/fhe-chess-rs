@@ -14,8 +14,13 @@ url = "2.3.1"
 chess = "3.2.0"
 
 [[bin]]
-name = "server"
-path = "src/server/main.rs"
+name = "fhe-server"
+path = "src/fhe-server/main.rs"
+
+[[bin]]
+name = "clear-server"
+path = "src/clear-server/main.rs"
+
 
 [[bin]]
 name = "client"
