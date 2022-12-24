@@ -18,7 +18,6 @@ fn main() {
         .expect("Error sending a message");
     println!("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
     for line in io::stdin().lock().lines() {
-        // let board = Board::default();
         let board = Board::from_fen(line.unwrap());
         if board.is_none() {
             println!("Invalid FEN");
