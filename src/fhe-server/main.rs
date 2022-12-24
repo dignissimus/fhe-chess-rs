@@ -114,16 +114,14 @@ fn main() {
                             }
                             println!("Verbose: {:?}", data);
                             let message = data.unwrap();
-                            if let ChessMessage::StreamPosition {
-                                identifier,
-                                position,
-                            } = message
-                            {
+                            if let ChessMessage::StreamPositions { positions } = message {
                                 let mut qx = queue.lock().unwrap();
                                 let mut cx = counter.lock().unwrap();
-                                *cx += 1;
+                                *cx += positions.len() as u64;
                                 drop(cx);
-                                qx.push((identifier, position));
+                                for position in positions {
+                                    qx.push(position);
+                                }
                                 drop(qx);
                                 loop {
                                     let counter = counter.lock().unwrap();

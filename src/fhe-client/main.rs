@@ -27,7 +27,7 @@ fn main() {
 
         println!("Sending data");
         let message = StreamPositions {
-            positions: vec![(0, position)]
+            positions: vec![(0, position)],
         };
         let serialised = serde_json::to_string(&message).unwrap();
         websocket.write_message(Text(serialised)).unwrap();
