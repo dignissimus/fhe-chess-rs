@@ -225,6 +225,7 @@ dependencies = [
  "concrete-integer",
  "concrete-shortint",
  "paste",
+ "serde",
 ]
 
 [[package]]
@@ -448,6 +449,7 @@ dependencies = [
 name = "fhe-chess-rs"
 version = "0.1.0"
 dependencies = [
+ "bincode",
  "chess",
  "concrete",
  "criterion",
