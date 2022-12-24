@@ -54,7 +54,7 @@ pub struct Move {
     pub positions: Vec<Position>,
 }
 
-fn bitboard_location(piece: Piece, color: Color) -> usize {
+fn bitboard_location(color: Color, piece: Piece, square: Square) -> usize {
     let piece_index = match piece {
         Piece::Pawn => 0,
         Piece::Knight => 1,
@@ -68,20 +68,22 @@ fn bitboard_location(piece: Piece, color: Color) -> usize {
         Color::White => 1,
     };
 
-    colour_index * (64 * 6) + piece_index * 64
+    let square_index = square.get_rank().to_index() * 8 + square.get_file().to_index();
+
+    colour_index * (64 * 6) + piece_index * 64 + square_index
 }
 
 impl Position {
     pub fn from_board(board: Board) -> Position {
         let mut serialised = vec![0; 64 * 12 + 1];
-        for rank in 0..7 {
-            for file in 0..7 {
+        for rank in 0..=7 {
+            for file in 0..=7 {
                 let rank = Rank::from_index(rank);
                 let file = File::from_index(file);
                 let square = Square::make_square(rank, file);
                 if let Some(piece) = board.piece_on(square) {
                     let color = board.color_on(square).unwrap();
-                    let location = bitboard_location(piece, color);
+                    let location = bitboard_location(color, piece, square);
                     serialised[location] = 1;
                 }
             }
