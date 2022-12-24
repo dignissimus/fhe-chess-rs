@@ -12,10 +12,10 @@ fn main() {
     );
     println!(
         "{:?}",
-        serde_json::to_string(&ChessMessage::StreamMove {
+        serde_json::to_string(&ChessMessage::StreamPosition {
             identifier: 1,
-            movement: Move {
-                positions: Vec::new()
+            position: Position {
+                data: Vec::new()
             }
         })
     );
@@ -45,7 +45,7 @@ fn main() {
                         println!("Verbose: {:?}", data);
                         let message = data.unwrap();
                         match message {
-                            ChessMessage::StreamMove { .. } => {
+                            ChessMessage::StreamPosition { .. } => {
                                 let evaluations: Vec<ChessMessage> = receiver.try_iter().collect();
                                 let response = serde_json::to_string(&evaluations).unwrap();
                                 websocket

@@ -9,7 +9,7 @@ pub enum ServerState {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Position {
-    data: Vec<u8>,
+    pub data: Vec<u8>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -36,9 +36,9 @@ pub enum Colour {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub enum ChessMessage {
-    StreamMove {
+    StreamPosition {
         identifier: u8,
-        movement: Move,
+        position: Position,
     },
     ReadEvaluations, // Remove me, only use the below
     EvaluationResult {
