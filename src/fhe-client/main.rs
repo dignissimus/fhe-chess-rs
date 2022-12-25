@@ -69,7 +69,7 @@ fn main() {
         }
 
         let move_index = evaluations.iter().max_by_key(|entry| -entry.1).unwrap();
-        println!("The server makes move {:?}", move_map[move_index.0]);
+        println!("The server makes move {}", move_map[move_index.0]);
         let board = board.make_move_new(move_map[move_index.0]);
         println!("{}", board);
     }
