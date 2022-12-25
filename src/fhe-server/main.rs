@@ -105,9 +105,8 @@ fn main() {
                             transmitter
                                 .send(ChessMessage::FheEvaluationResult {
                                     identifier,
-                                    // evaluation: (white_evaluation.clone(), black_evaluation.clone()),
                                     evaluation: (
-                                        black_evaluation.clone(),
+                                        white_evaluation.clone(),
                                         black_evaluation.clone(),
                                     ),
                                 })
