@@ -32,6 +32,10 @@ name = "fhe-client"
 path = "src/fhe-client/main.rs"
 
 [[bin]]
+name = "fhe-evaluation-client"
+path = "src/fhe-evaluation-client/main.rs"
+
+[[bin]]
 name = "clear-client"
 path = "src/clear-client/main.rs"
 

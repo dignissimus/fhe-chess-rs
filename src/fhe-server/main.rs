@@ -14,7 +14,7 @@ use tungstenite::Message::*;
 
 use concrete::{set_server_key, FheUint8, ServerKey};
 
-const N_CORES: u8 = 8;
+const N_CORES: u8 = 48;
 
 fn main() {
     println!(
