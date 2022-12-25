@@ -1,12 +1,9 @@
-use bincode;
 use concrete::{generate_keys, ConfigBuilder};
 use std::fs::File;
 use std::io::Write;
 
 fn main() {
-    let config = ConfigBuilder::all_disabled()
-        .enable_default_uint12()
-        .build();
+    let config = ConfigBuilder::all_disabled().enable_default_uint8().build();
     println!("Generating encryption keys...");
     let (client_key, server_key) = generate_keys(config);
 

@@ -2,8 +2,7 @@ use chess::Board;
 use fhe_chess_rs::common::ChessMessage::*;
 use fhe_chess_rs::common::*;
 use std::io::{self, BufRead};
-use std::thread;
-use std::time;
+
 use tungstenite::client;
 use tungstenite::Message::*;
 use url::Url;

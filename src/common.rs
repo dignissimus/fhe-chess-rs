@@ -1,6 +1,10 @@
 use chess::{Board, Color, File, Piece, Rank, Square};
 use serde::{Deserialize, Serialize};
 
+use concrete::prelude::*;
+use concrete::{ClientKey, FheUint8};
+use std::fmt;
+
 #[derive(Serialize, Deserialize)]
 pub enum ServerState {
     AwaitingGame,
@@ -10,6 +14,11 @@ pub enum ServerState {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Position {
     pub data: Vec<u8>,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct FhePosition {
+    pub data: Vec<FheUint8>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -34,7 +43,7 @@ pub enum Colour {
     White,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize)]
 pub enum ChessMessage {
     StreamPosition {
         identifier: u8,
@@ -43,18 +52,86 @@ pub enum ChessMessage {
     StreamPositions {
         positions: Vec<(u8, Position)>,
     },
+    StreamFhePositions {
+        positions: Vec<(u8, FhePosition)>,
+    },
     ReadEvaluations, // Remove me, only use the below
     EvaluationResult {
         identifier: u8,
         evaluation: Evaluation,
     },
+    FheEvaluationResult {
+        identifier: u8,
+        evaluation: FheEvaluation,
+    },
 }
 
+impl fmt::Debug for ChessMessage {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.debug_struct("...").finish()
+    }
+}
+
+type FheEvaluation = (FhePackedInteger, FhePackedInteger);
+pub type FhePackedInteger = (FheUint8, FheUint8, FheUint8, FheUint8);
 type Evaluation = i8;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Move {
     pub positions: Vec<Position>,
+}
+
+pub fn read_evaluation(evaluation: &FheEvaluation, client_key: &ClientKey) -> i8 {
+    let (white, black) = evaluation;
+    return read_integer(white, client_key) - read_integer(black, client_key);
+}
+
+pub fn read_integer(packed: &FhePackedInteger, client_key: &ClientKey) -> i8 {
+    let b0: u8 = FheUint8::decrypt(&packed.0, client_key);
+    let b1: u8 = FheUint8::decrypt(&packed.1, client_key);
+    let b2: u8 = FheUint8::decrypt(&packed.2, client_key);
+    let b3: u8 = FheUint8::decrypt(&packed.1, client_key);
+
+    return (b0 + b1 + b2 + b3) as i8;
+}
+
+pub fn packed_zero(zero: &FheUint8) -> FhePackedInteger {
+    (zero.clone(), zero.clone(), zero.clone(), zero.clone())
+}
+
+pub fn pack_multiply_add(pack: &mut FhePackedInteger, multiplier: &u8, right: &FheUint8) {
+    match multiplier {
+        1 => {
+            pack.0 += right;
+        }
+        2 => {
+            pack.1 += right;
+        }
+        3 => {
+            pack.1 += right;
+        }
+        4 => {
+            pack.2 += right;
+        }
+        5 => {
+            pack.0 += right;
+            pack.2 += right;
+        }
+        6 => {
+            pack.1 += right;
+            pack.2 += right;
+        }
+        7 => {
+            pack.0 += right;
+            pack.1 += right;
+            pack.2 += right;
+        }
+        8 => {
+            pack.3 += right;
+        }
+
+        _ => panic!("Oh no"),
+    }
 }
 
 fn bitboard_location(color: Color, piece: Piece, square: Square) -> usize {
@@ -96,5 +173,15 @@ impl Position {
             Color::White => 1,
         };
         Position { data: serialised }
+    }
+
+    pub fn to_fhe(&self, client_key: &ClientKey) -> FhePosition {
+        FhePosition {
+            data: self
+                .data
+                .iter()
+                .map(|bit| FheUint8::encrypt(*bit as u8, client_key))
+                .collect(),
+        }
     }
 }
