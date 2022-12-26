@@ -135,7 +135,7 @@ fn main() {
                     }
 
                     positions.insert(board.get_hash(), board);
-                    if depth == MAX_DEPTH {
+                    if depth == MAX_DEPTH - 1 {
                         core_set.insert(board.get_hash(), board);
                     } else {
                         // If we would like to explore this node, then add it to the queue
