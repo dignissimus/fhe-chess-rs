@@ -2,9 +2,9 @@ use fhe_chess_rs::common::FhePackedInteger;
 use fhe_chess_rs::common::*;
 use std::fs;
 use std::net::TcpListener;
-use std::ops::Add;
+
 use std::ops::Mul;
-use std::ops::Shl;
+
 use std::sync::mpsc;
 use std::sync::{Arc, Mutex};
 use std::thread;
@@ -12,7 +12,7 @@ use std::time;
 use tungstenite::protocol::WebSocketConfig;
 use tungstenite::Message::*;
 
-use concrete::{set_server_key, FheUint8, ServerKey};
+use concrete::{set_server_key, ServerKey};
 
 const N_CORES: u8 = 48;
 

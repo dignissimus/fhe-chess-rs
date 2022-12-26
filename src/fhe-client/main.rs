@@ -21,27 +21,24 @@ fn main() {
 
     let board = Board::default();
     for line in io::stdin().lock().lines() {
-        println!("Line");
         let line = line.unwrap();
-        let board = board.make_move_new(ChessMove::from_san(&board, &line).unwrap());
-        println!("made move");
+        let result = ChessMove::from_san(&board, &line);
+        if result.is_err() {
+            println!("Invalid move (hint: write exd5 as d5");
+            continue;
+        }
+        let board = board.make_move_new(result.unwrap());
         let moves = MoveGen::new_legal(&board);
-        println!("Gen");
         let positions =
             moves.map(|m| Position::from_board(board.make_move_new(m)).to_fhe(&client_key));
-        println!("Pos");
         let moves = MoveGen::new_legal(&board);
-        println!("More gen");
-        println!("Gen move map");
         let move_map: HashMap<u8, ChessMove> = HashMap::from_iter((0..).zip(moves));
-        println!("Gen pos map");
         let position_map: HashMap<u8, FhePosition> = HashMap::from_iter((0..).zip(positions));
-        println!("Gen counter");
         let mut counter = position_map.len();
-        println!("Eval map");
         let mut evaluations = HashMap::<u8, i8>::new();
 
-        println!("Sending data");
+        let n_positions = position_map.len();
+        println!("Sending data to the server");
         let message = StreamFhePositions {
             positions: position_map.into_iter().collect(),
         };
@@ -61,8 +58,7 @@ fn main() {
                 } = message
                 {
                     let evaluation = read_evaluation(&evaluation, &client_key);
-                    println!("Identifier {:?} {:?}", identifier, evaluation);
-                    println!("Counter {:?}", counter);
+                    println!("Progress {} / {}", n_positions - counter, n_positions);
                     evaluations.entry(identifier).or_insert(evaluation);
                 }
             }

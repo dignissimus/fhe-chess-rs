@@ -1,5 +1,5 @@
 use concrete::prelude::*;
-use concrete::{generate_keys, set_server_key, ClientKey, ConfigBuilder, FheUint8, ServerKey};
+use concrete::{set_server_key, ClientKey, FheUint8, ServerKey};
 use std::fs;
 use std::ops::Mul;
 use std::time::Instant;

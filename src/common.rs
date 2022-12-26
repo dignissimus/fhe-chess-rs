@@ -83,7 +83,7 @@ pub struct Move {
 
 pub fn read_evaluation(evaluation: &FheEvaluation, client_key: &ClientKey) -> i8 {
     let (white, black) = evaluation;
-    return read_integer(white, client_key) - read_integer(black, client_key);
+    read_integer(white, client_key) - read_integer(black, client_key)
 }
 
 pub fn read_integer(packed: &FhePackedInteger, client_key: &ClientKey) -> i8 {
@@ -92,7 +92,7 @@ pub fn read_integer(packed: &FhePackedInteger, client_key: &ClientKey) -> i8 {
     let b2: u8 = FheUint8::decrypt(&packed.2, client_key);
     let b3: u8 = FheUint8::decrypt(&packed.1, client_key);
 
-    return (b0 + b1 + b2 + b3) as i8;
+    (b0 + b1 + b2 + b3) as i8
 }
 
 pub fn packed_zero(zero: &FheUint8) -> FhePackedInteger {
