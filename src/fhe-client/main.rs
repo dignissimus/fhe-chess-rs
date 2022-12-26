@@ -19,26 +19,29 @@ fn main() {
     let client_key = fs::read("client-key.bin").expect("Unable to read client key");
     let client_key: ClientKey = bincode::deserialize(&client_key).unwrap();
 
-    let board = Board::default();
+    let mut board = Board::default();
+    println!("Please enter a move");
     for line in io::stdin().lock().lines() {
         let line = line.unwrap();
         let result = ChessMove::from_san(&board, &line);
         if result.is_err() {
-            println!("Invalid move (hint: write exd5 as d5");
+            println!("Invalid move");
             continue;
         }
-        let board = board.make_move_new(result.unwrap());
+        board = board.make_move_new(result.unwrap());
         let moves = MoveGen::new_legal(&board);
         let positions =
             moves.map(|m| Position::from_board(board.make_move_new(m)).to_fhe(&client_key));
         let moves = MoveGen::new_legal(&board);
         let move_map: HashMap<u8, ChessMove> = HashMap::from_iter((0..).zip(moves));
+
+        println!("Encoding positions");
         let position_map: HashMap<u8, FhePosition> = HashMap::from_iter((0..).zip(positions));
         let mut counter = position_map.len();
         let mut evaluations = HashMap::<u8, i8>::new();
-
         let n_positions = position_map.len();
-        println!("Sending data to the server");
+
+        println!("Sending position data to the server");
         let message = StreamFhePositions {
             positions: position_map.into_iter().collect(),
         };
@@ -66,7 +69,7 @@ fn main() {
 
         let move_index = evaluations.iter().max_by_key(|entry| -entry.1).unwrap();
         println!("The server makes move {}", move_map[move_index.0]);
-        let board = board.make_move_new(move_map[move_index.0]);
+        board = board.make_move_new(move_map[move_index.0]);
         println!("{}", board);
     }
 }
