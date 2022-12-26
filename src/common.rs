@@ -1,7 +1,7 @@
 use chess::{Board, Color, File, Piece, Rank, Square};
 use serde::{Deserialize, Serialize};
 
-use concrete_shortint::{ServerKey, Ciphertext, ClientKey};
+use concrete_shortint::{Ciphertext, ClientKey, ServerKey};
 use std::fmt;
 
 #[derive(Serialize, Deserialize)]
@@ -52,7 +52,7 @@ pub enum ChessMessage {
         positions: Vec<(u8, Position)>,
     },
     StreamFhePositions {
-        positions: Vec<(u8, FhePosition)>,
+        positions: Vec<(u64, FhePosition)>,
     },
     ReadEvaluations, // Remove me, only use the below
     EvaluationResult {
@@ -60,7 +60,7 @@ pub enum ChessMessage {
         evaluation: Evaluation,
     },
     FheEvaluationResult {
-        identifier: u8,
+        identifier: u64,
         evaluation: FheEvaluation,
     },
 }
@@ -98,7 +98,12 @@ pub fn packed_zero(zero: &Ciphertext) -> FhePackedInteger {
     (zero.clone(), zero.clone(), zero.clone(), zero.clone())
 }
 
-pub fn pack_multiply_add(server_key: &ServerKey, pack: &mut FhePackedInteger, multiplier: &u8, right: &Ciphertext) {
+pub fn pack_multiply_add(
+    server_key: &ServerKey,
+    pack: &mut FhePackedInteger,
+    multiplier: &u8,
+    right: &Ciphertext,
+) {
     match multiplier {
         1 => {
             server_key.unchecked_add_assign(&mut pack.0, right);
