@@ -12,7 +12,7 @@ use std::time;
 use tungstenite::protocol::WebSocketConfig;
 use tungstenite::Message::*;
 
-use concrete::{set_server_key, ServerKey};
+use concrete_shortint::ServerKey;
 
 const N_CORES: u8 = 8;
 
@@ -36,7 +36,6 @@ fn main() {
 
     let server_key = fs::read("server-key.bin").unwrap();
     let server_key: ServerKey = bincode::deserialize(&server_key).unwrap();
-    set_server_key(server_key.clone());
 
     for stream in server.incoming() {
         let stream = stream.unwrap();
@@ -63,7 +62,6 @@ fn main() {
 
                 let weights = weights.clone();
                 let handle = thread::spawn(move || {
-                    set_server_key(server_key.clone());
                     loop {
                         // Attempt to find work inside the queue
                         let mut queue = queue.lock().unwrap();
@@ -71,7 +69,7 @@ fn main() {
                         drop(queue);
 
                         if let Some((identifier, position)) = data {
-                            let zero = position.data.get(0).unwrap().mul(0u8);
+                            let zero = server_key.create_trivial(0);
 
                             let white_scores = weights
                                 .iter()
@@ -90,14 +88,14 @@ fn main() {
 
                             let mut index = 1;
                             for (weight, bit) in white_scores {
-                                pack_multiply_add(&mut white_evaluation, &weight, bit);
+                                pack_multiply_add(&server_key, &mut white_evaluation, &weight, bit);
                                 println!("{}", index);
                                 index += 1;
                             }
 
                             let mut index = 1;
                             for (weight, bit) in black_scores {
-                                pack_multiply_add(&mut black_evaluation, &weight, bit);
+                                pack_multiply_add(&server_key, &mut black_evaluation, &weight, bit);
                                 println!("{}", index);
                                 index += 1;
                             }

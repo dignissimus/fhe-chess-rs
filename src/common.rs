@@ -1,8 +1,7 @@
 use chess::{Board, Color, File, Piece, Rank, Square};
 use serde::{Deserialize, Serialize};
 
-use concrete::prelude::*;
-use concrete::{ClientKey, FheUint8};
+use concrete_shortint::{ServerKey, Ciphertext, ClientKey};
 use std::fmt;
 
 #[derive(Serialize, Deserialize)]
@@ -18,7 +17,7 @@ pub struct Position {
 
 #[derive(Serialize, Deserialize)]
 pub struct FhePosition {
-    pub data: Vec<FheUint8>,
+    pub data: Vec<Ciphertext>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -73,7 +72,7 @@ impl fmt::Debug for ChessMessage {
 }
 
 type FheEvaluation = (FhePackedInteger, FhePackedInteger);
-pub type FhePackedInteger = (FheUint8, FheUint8, FheUint8, FheUint8);
+pub type FhePackedInteger = (Ciphertext, Ciphertext, Ciphertext, Ciphertext);
 type Evaluation = i8;
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -87,47 +86,47 @@ pub fn read_evaluation(evaluation: &FheEvaluation, client_key: &ClientKey) -> i8
 }
 
 pub fn read_integer(packed: &FhePackedInteger, client_key: &ClientKey) -> i8 {
-    let b0: u8 = FheUint8::decrypt(&packed.0, client_key);
-    let b1: u8 = FheUint8::decrypt(&packed.1, client_key);
-    let b2: u8 = FheUint8::decrypt(&packed.2, client_key);
-    let b3: u8 = FheUint8::decrypt(&packed.1, client_key);
+    let b0: u64 = client_key.decrypt(&packed.0);
+    let b1: u64 = client_key.decrypt(&packed.1);
+    let b2: u64 = client_key.decrypt(&packed.2);
+    let b3: u64 = client_key.decrypt(&packed.3);
 
     (b0 + b1 + b2 + b3) as i8
 }
 
-pub fn packed_zero(zero: &FheUint8) -> FhePackedInteger {
+pub fn packed_zero(zero: &Ciphertext) -> FhePackedInteger {
     (zero.clone(), zero.clone(), zero.clone(), zero.clone())
 }
 
-pub fn pack_multiply_add(pack: &mut FhePackedInteger, multiplier: &u8, right: &FheUint8) {
+pub fn pack_multiply_add(server_key: &ServerKey, pack: &mut FhePackedInteger, multiplier: &u8, right: &Ciphertext) {
     match multiplier {
         1 => {
-            pack.0 += right;
+            server_key.unchecked_add_assign(&mut pack.0, right);
         }
         2 => {
-            pack.1 += right;
+            server_key.unchecked_add_assign(&mut pack.1, right);
         }
         3 => {
-            pack.1 += right;
+            server_key.unchecked_add_assign(&mut pack.1, right);
         }
         4 => {
-            pack.2 += right;
+            server_key.unchecked_add_assign(&mut pack.2, right);
         }
         5 => {
-            pack.0 += right;
-            pack.2 += right;
+            server_key.unchecked_add_assign(&mut pack.0, right);
+            server_key.unchecked_add_assign(&mut pack.2, right);
         }
         6 => {
-            pack.1 += right;
-            pack.2 += right;
+            server_key.unchecked_add_assign(&mut pack.1, right);
+            server_key.unchecked_add_assign(&mut pack.2, right);
         }
         7 => {
-            pack.0 += right;
-            pack.1 += right;
-            pack.2 += right;
+            server_key.unchecked_add_assign(&mut pack.0, right);
+            server_key.unchecked_add_assign(&mut pack.1, right);
+            server_key.unchecked_add_assign(&mut pack.2, right);
         }
         8 => {
-            pack.3 += right;
+            server_key.unchecked_add_assign(&mut pack.3, right);
         }
 
         _ => panic!("Oh no"),
@@ -180,7 +179,7 @@ impl Position {
             data: self
                 .data
                 .iter()
-                .map(|bit| FheUint8::encrypt(*bit as u8, client_key))
+                .map(|bit| client_key.unchecked_encrypt(*bit as u64))
                 .collect(),
         }
     }

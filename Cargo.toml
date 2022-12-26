@@ -7,6 +7,7 @@ edition = "2021"
 
 [dependencies]
 concrete = { version = "0.2.1", features = [ "booleans", "shortints", "integers", "serde" ] }
+concrete-shortint = "0.1.1"
 tungstenite = "0.18.0"
 serde_json = "1.0.91"
 serde = "1.0.151"
@@ -23,17 +24,17 @@ path = "src/fhe-server/main.rs"
 name = "clear-server"
 path = "src/clear-server/main.rs"
 
-[[bin]]
-name = "fhe-bench"
-path = "src/fhe-bench/bench.rs"
+#[[bin]]
+#name = "fhe-bench"
+#path = "src/fhe-bench/bench.rs"
 
 [[bin]]
 name = "fhe-client"
 path = "src/fhe-client/main.rs"
 
-[[bin]]
-name = "fhe-evaluation-client"
-path = "src/fhe-evaluation-client/main.rs"
+#[[bin]]
+#name = "fhe-evaluation-client"
+#path = "src/fhe-evaluation-client/main.rs"
 
 [[bin]]
 name = "clear-client"

@@ -4,7 +4,7 @@ use fhe_chess_rs::common::*;
 use std::io::{self, BufRead};
 
 use chess::{ChessMove, MoveGen};
-use concrete::ClientKey;
+use concrete_shortint::ClientKey;
 use std::collections::HashMap;
 use std::fs;
 use tungstenite::client;

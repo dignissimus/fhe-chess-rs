@@ -1,11 +1,11 @@
-use concrete::{generate_keys, ConfigBuilder};
+use concrete_shortint::gen_keys;
+use concrete_shortint::parameters::PARAM_MESSAGE_1_CARRY_7;
 use std::fs::File;
 use std::io::Write;
 
 fn main() {
-    let config = ConfigBuilder::all_disabled().enable_default_uint8().build();
     println!("Generating encryption keys...");
-    let (client_key, server_key) = generate_keys(config);
+    let (client_key, server_key) = gen_keys(PARAM_MESSAGE_1_CARRY_7);
 
     println!("Writing encryption keys to disk");
     let mut file = File::create("client-key.bin").unwrap();

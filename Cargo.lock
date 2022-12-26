@@ -452,6 +452,7 @@ dependencies = [
  "bincode",
  "chess",
  "concrete",
+ "concrete-shortint",
  "criterion",
  "serde",
  "serde_json",
