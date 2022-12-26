@@ -108,6 +108,8 @@ fn main() {
         let root = board.get_hash();
         positions.insert(root, board);
 
+        let mut core_set: HashMap<u64, Board> = HashMap::new();
+
         for depth in 0..MAX_DEPTH {
             for _ in 0..queue.len() {
                 let phash = queue.pop_front().unwrap();
@@ -133,8 +135,10 @@ fn main() {
                     }
 
                     positions.insert(board.get_hash(), board);
-                    // If we would like to explore this node, then add it to the queue
-                    if depth != MAX_DEPTH {
+                    if depth == MAX_DEPTH {
+                        core_set.insert(board.get_hash(), board);
+                    } else {
+                        // If we would like to explore this node, then add it to the queue
                         queue.push_back(board.get_hash());
                     }
                 }
@@ -146,7 +150,7 @@ fn main() {
 
         println!("Encoding positions...");
         let message = StreamFhePositions {
-            positions: positions
+            positions: core_set
                 .into_par_iter()
                 .map(|(identifier, board)| {
                     (identifier, Position::from_board(board).to_fhe(&client_key))
