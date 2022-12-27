@@ -146,7 +146,7 @@ fn main() {
             }
         }
 
-        let npositions = positions.len();
+        let npositions = core_set.len();
 
         println!("Encoding positions...");
         let serialised_messages: Vec<Vec<u8>> = core_set
