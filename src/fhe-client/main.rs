@@ -149,20 +149,24 @@ fn main() {
         let npositions = positions.len();
 
         println!("Encoding positions...");
-        let message = StreamFhePositions {
-            positions: core_set
-                .into_par_iter()
-                .map(|(identifier, board)| {
-                    (identifier, Position::from_board(board).to_fhe(&client_key))
+        let serialised_messages: Vec<Vec<u8>> = core_set
+            .into_par_iter()
+            .map(|(identifier, board)| {
+                bincode::serialize(&StreamFhePositions {
+                    positions: vec![(identifier, Position::from_board(board).to_fhe(&client_key))],
                 })
-                .collect(),
-        };
+                .unwrap()
+            })
+            .collect();
 
         println!("Sending position data to the server...");
-        let serialised = bincode::serialize(&message).unwrap();
-        websocket.write_message(Binary(serialised)).unwrap();
+        for message in serialised_messages {
+            websocket.write_message(Binary(message)).unwrap();
+        }
+        websocket.write_message(Binary(
+            bincode::serialize(&ChessMessage::ReadEvaluations).unwrap(),
+        ));
         let mut counter = npositions;
-
         while counter > 0 {
             let message = websocket.read_message().unwrap();
             counter -= 1;

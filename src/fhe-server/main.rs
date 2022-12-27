@@ -115,27 +115,10 @@ fn main() {
                     println!("Error while accepting websocket connection: {}", msg);
                 }
 
-                Ok(websocket) => {
-                    let counter: Arc<Mutex<u64>> = Arc::new(Mutex::new(0));
-                    let websocket = Arc::new(Mutex::new(websocket));
-                    let wsc = websocket.clone();
-
-                    let cc = counter.clone();
-                    thread::spawn(move || {
-                        for evaluation in receiver.iter() {
-                            let serialised = bincode::serialize(&evaluation).unwrap();
-                            let mut wsc = wsc.lock().unwrap();
-                            wsc.write_message(Binary(serialised)).unwrap();
-                            let mut cx = cc.lock().unwrap();
-                            *cx -= 1;
-                            println!("{} positions left to go", cx);
-                            drop(cx);
-                        }
-                    });
+                Ok(mut websocket) => {
+                    let mut counter = 0;
                     loop {
-                        let mut websocket = websocket.lock().unwrap();
                         let message = websocket.read_message().unwrap();
-                        drop(websocket);
                         if let Binary(serialised) = message {
                             let data: bincode::Result<ChessMessage> =
                                 bincode::deserialize(&serialised);
@@ -145,24 +128,26 @@ fn main() {
                             }
                             println!("Verbose: {:?}", data);
                             let message = data.unwrap();
-                            if let ChessMessage::StreamFhePositions { positions } = message {
-                                println!("Received positions! Processing.");
-                                let mut qx = queue.lock().unwrap();
-                                let mut cx = counter.lock().unwrap();
-                                *cx += positions.len() as u64;
-                                drop(cx);
-                                for position in positions {
-                                    qx.push(position);
-                                }
-                                drop(qx);
-                                loop {
-                                    let counter = counter.lock().unwrap();
-                                    if *counter == 0 {
-                                        break;
+                            match message {
+                                ChessMessage::StreamFhePositions { positions } => {
+                                    println!("Received positions! Processing.");
+                                    let mut qx = queue.lock().unwrap();
+                                    counter += positions.len() as u64;
+                                    for position in positions {
+                                        qx.push(position);
                                     }
-                                    drop(counter);
-                                    thread::sleep(time::Duration::from_millis(1));
+                                    drop(qx);
                                 }
+
+                                ChessMessage::ReadEvaluations => {
+                                    for evaluation in receiver.iter() {
+                                        let serialised = bincode::serialize(&evaluation).unwrap();
+                                        websocket.write_message(Binary(serialised)).unwrap();
+                                        counter -= 1;
+                                        println!("counter {}", counter);
+                                    }
+                                }
+                                _ => unimplemented!(),
                             }
                         }
                     }
