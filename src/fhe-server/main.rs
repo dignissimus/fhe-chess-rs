@@ -140,12 +140,12 @@ fn main() {
                                 }
 
                                 ChessMessage::ReadEvaluations => {
-                                    for evaluation in receiver.iter() {
+                                    for (_index, evaluation) in (1..=counter).zip(receiver.iter()) {
                                         let serialised = bincode::serialize(&evaluation).unwrap();
                                         websocket.write_message(Binary(serialised)).unwrap();
-                                        counter -= 1;
                                         println!("counter {}", counter);
                                     }
+                                    counter = 0;
                                 }
                                 _ => unimplemented!(),
                             }
