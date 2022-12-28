@@ -9,6 +9,7 @@ use chess::{ChessMove, Color, MoveGen};
 use concrete_shortint::{ClientKey, ServerKey};
 use std::collections::{HashMap, VecDeque};
 use std::fs;
+use indicatif::ParallelProgressIterator;
 
 use std::sync::{Arc, Mutex};
 const MAX_DEPTH: u8 = 2;
@@ -163,7 +164,7 @@ fn main() {
         // Server code
 
         let zero = server_key.create_trivial(0);
-        let messages = serialised_messages
+        let messages = serialised_messages.progress_count(npositions as u64)
             .map(|(identifier, position)| {
                 let white_scores = weights
                     .iter()
@@ -197,6 +198,7 @@ fn main() {
         // Client code
         let evaluations = Mutex::new(evaluations);
         let evaluations = Arc::new(evaluations);
+
         messages.for_each(|message| {
             if let FheEvaluationResult {
                 evaluation,
