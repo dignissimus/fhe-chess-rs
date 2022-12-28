@@ -43,19 +43,20 @@ fn minimax(
             .iter()
             .map(|candidate| {
                 (
-                    *evaluations.get(candidate).unwrap() * multiplier(turn),
+                    *evaluations.get(candidate).unwrap_or(&-128) * multiplier(turn),
                     *candidate,
                 )
             })
             .max()
-            .unwrap_or((-126, 0))
+            .unwrap_or((-128, 0))
     } else {
         let ((evaluation, _), candidate) = candidates
             .iter()
-            .map(|candidate| (moves.get(candidate).unwrap(), candidate))
+            .map(|candidate| (moves.get(candidate), candidate))
+            .filter(|(moveset, candidate)| moveset.is_some())
             .map(|(moveset, candidate)| {
                 (
-                    minimax(depth - 1, flip(turn), moveset, moves, evaluations),
+                    minimax(depth - 1, flip(turn), moveset.unwrap(), moves, evaluations),
                     candidate,
                 )
             })
@@ -162,8 +163,9 @@ fn main() {
         // Server code
 
         let zero = server_key.create_trivial(0);
-        let style = ProgressBar::new(npositions as u64)
-            .with_style(ProgressStyle::with_template("{wide_bar} {pos}/{len} [{eta_precise}]").unwrap());
+        let style = ProgressBar::new(npositions as u64).with_style(
+            ProgressStyle::with_template("{wide_bar} {pos}/{len} [{eta_precise}]").unwrap(),
+        );
         let messages = serialised_messages
             .progress_with(style)
             .map(|(identifier, position)| {
