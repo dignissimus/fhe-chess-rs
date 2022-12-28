@@ -43,12 +43,12 @@ fn minimax(
             .iter()
             .map(|candidate| {
                 (
-                    *evaluations.get(candidate).unwrap_or(&-128) * multiplier(turn),
+                    evaluations.get(candidate).map_or(127, |e| e * multiplier(turn)),
                     *candidate,
                 )
             })
             .max()
-            .unwrap_or((-128, 0))
+            .unwrap_or((-127, 0))
     } else {
         let ((evaluation, _), candidate) = candidates
             .iter()
