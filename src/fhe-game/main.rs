@@ -7,9 +7,9 @@ use std::io::{self, BufRead};
 use bincode;
 use chess::{ChessMove, Color, MoveGen};
 use concrete_shortint::{ClientKey, ServerKey};
+use indicatif::{ParallelProgressIterator, ProgressBar, ProgressStyle};
 use std::collections::{HashMap, VecDeque};
 use std::fs;
-use indicatif::ParallelProgressIterator;
 
 use std::sync::{Arc, Mutex};
 const MAX_DEPTH: u8 = 2;
@@ -155,16 +155,17 @@ fn main() {
         let npositions = core_set.len();
 
         println!("Encoding positions...");
-        let serialised_messages = core_set
-            .into_par_iter()
-            .map(|(identifier, board)| {
-                (identifier, Position::from_board(board).to_fhe(&client_key))
-            });
+        let serialised_messages = core_set.into_par_iter().map(|(identifier, board)| {
+            (identifier, Position::from_board(board).to_fhe(&client_key))
+        });
 
         // Server code
 
         let zero = server_key.create_trivial(0);
-        let messages = serialised_messages.progress_count(npositions as u64)
+        let style = ProgressBar::new(npositions as u64)
+            .with_style(ProgressStyle::with_template("{wide_bar} {pos}/{len} [{eta}]").unwrap());
+        let messages = serialised_messages
+            .progress_with(style)
             .map(|(identifier, position)| {
                 let white_scores = weights
                     .iter()
