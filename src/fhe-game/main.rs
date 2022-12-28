@@ -154,18 +154,16 @@ fn main() {
         let npositions = core_set.len();
 
         println!("Encoding positions...");
-        let serialised_messages: Vec<(u64, FhePosition)> = core_set
+        let serialised_messages = core_set
             .into_par_iter()
             .map(|(identifier, board)| {
                 (identifier, Position::from_board(board).to_fhe(&client_key))
-            })
-            .collect();
+            });
 
         // Server code
 
         let zero = server_key.create_trivial(0);
         let messages = serialised_messages
-            .into_par_iter()
             .map(|(identifier, position)| {
                 let white_scores = weights
                     .iter()
