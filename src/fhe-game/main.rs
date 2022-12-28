@@ -4,16 +4,14 @@ use fhe_chess_rs::common::*;
 use rayon::prelude::*;
 use std::io::{self, BufRead};
 
+use bincode;
 use chess::{ChessMove, Color, MoveGen};
-use concrete_shortint::ClientKey;
+use concrete_shortint::{ClientKey, ServerKey};
 use std::collections::{HashMap, VecDeque};
 use std::fs;
-use std::net::TcpStream;
-use tungstenite::client;
-use tungstenite::Message::*;
-use url::Url;
 
-const MAX_DEPTH: u8 = 1;
+use std::sync::{Arc, Mutex};
+const MAX_DEPTH: u8 = 2;
 
 fn multiplier(turn: chess::Color) -> i8 {
     match turn {
@@ -68,14 +66,18 @@ fn minimax(
 }
 
 fn main() {
-    let stream = TcpStream::connect("localhost:8085").unwrap();
-    let location = Url::parse("ws://localhost:8085").unwrap();
-    // let (mut websocket, _response) = client::connect(location).unwrap();
-    let (mut websocket, _response) = client::client(location, stream).unwrap();
+    // Client code
+
     println!("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 
     let client_key = fs::read("client-key.bin").expect("Unable to read client key");
     let client_key: ClientKey = bincode::deserialize(&client_key).unwrap();
+
+    let server_key = fs::read("server-key.bin").expect("Unable to read server key");
+    let server_key: ServerKey = bincode::deserialize(&server_key).unwrap();
+
+    let weights = fs::read_to_string("weights.json").unwrap();
+    let weights: Vec<i8> = serde_json::from_str(&weights).unwrap();
 
     let mut board = Board::default();
     println!("Please enter a move");
@@ -159,41 +161,57 @@ fn main() {
             })
             .collect();
 
-        println!("Sending position data to the server...");
-        let mut index = 0;
-        for message in serialised_messages {
-            websocket
-                .write_message(Binary(
-                    bincode::serialize(&StreamFhePositions {
-                        positions: vec![message],
-                    })
-                    .unwrap(),
-                ))
-                .unwrap();
-            index += 1;
-            println!("{}", npositions - index);
-        }
-        websocket.write_message(Binary(
-            bincode::serialize(&ChessMessage::ReadEvaluations).unwrap(),
-        ));
-        let mut counter = npositions;
-        while counter > 0 {
-            let message = websocket.read_message().unwrap();
-            counter -= 1;
-            if let Binary(message) = message {
-                let message: ChessMessage = bincode::deserialize(&message).unwrap();
-                if let FheEvaluationResult {
-                    evaluation,
-                    identifier,
-                } = message
-                {
-                    let evaluation = read_evaluation(&evaluation, &client_key);
-                    println!("Progress {} / {}", npositions - counter, npositions);
-                    evaluations.insert(identifier, evaluation);
-                }
-            }
-        }
+        // Server code
 
+        let zero = server_key.create_trivial(0);
+        let messages = serialised_messages
+            .into_par_iter()
+            .map(|(identifier, position)| {
+                let white_scores = weights
+                    .iter()
+                    .zip(position.data.iter())
+                    .filter(|(weight, _)| **weight > 0)
+                    .map(|(weight, bit)| (*weight as u8, bit));
+
+                let black_scores = weights
+                    .iter()
+                    .zip(position.data.iter())
+                    .filter(|(weight, _)| **weight < 0)
+                    .map(|(weight, bit)| (weight.unsigned_abs() as u8, bit));
+
+                let mut white_evaluation: FhePackedInteger = packed_zero(&zero);
+                let mut black_evaluation: FhePackedInteger = packed_zero(&zero);
+
+                for (weight, bit) in white_scores {
+                    pack_multiply_add(&server_key, &mut white_evaluation, &weight, bit);
+                }
+
+                for (weight, bit) in black_scores {
+                    pack_multiply_add(&server_key, &mut black_evaluation, &weight, bit);
+                }
+
+                FheEvaluationResult {
+                    identifier,
+                    evaluation: (white_evaluation, black_evaluation),
+                }
+            });
+
+        // Client code
+        let evaluations = Mutex::new(evaluations);
+        let evaluations = Arc::new(evaluations);
+        messages.for_each(|message| {
+            if let FheEvaluationResult {
+                evaluation,
+                identifier,
+            } = message
+            {
+                let mut evaluations = evaluations.lock().unwrap();
+                let evaluation = read_evaluation(&evaluation, &client_key);
+                evaluations.insert(identifier, evaluation);
+            }
+        });
+
+        let evaluations = evaluations.lock().unwrap();
         let candidates = moves.get(&root).unwrap();
         let (evaluation, best_move) = minimax(
             MAX_DEPTH - 1,

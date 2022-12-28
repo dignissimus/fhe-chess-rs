@@ -180,11 +180,13 @@ impl Position {
     }
 
     pub fn to_fhe(&self, client_key: &ClientKey) -> FhePosition {
+        let zero = client_key.unchecked_encrypt(0);
+        let one = client_key.unchecked_encrypt(1);
         FhePosition {
             data: self
                 .data
                 .iter()
-                .map(|bit| client_key.unchecked_encrypt(*bit as u64))
+                .map(|bit| if *bit == 0 { zero.clone() } else { one.clone() })
                 .collect(),
         }
     }

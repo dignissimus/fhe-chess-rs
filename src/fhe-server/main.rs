@@ -10,6 +10,9 @@ use std::time;
 use tungstenite::protocol::WebSocketConfig;
 use tungstenite::Message::*;
 
+use bzip2::read::BzDecoder;
+use bzip2::read::BzEncoder;
+use bzip2::Compression;
 use concrete_shortint::ServerKey;
 
 const N_CORES: u8 = 1;
