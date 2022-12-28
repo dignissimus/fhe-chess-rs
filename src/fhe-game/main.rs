@@ -48,7 +48,7 @@ fn minimax(
                 )
             })
             .max()
-            .unwrap()
+            .unwrap_or((-126, 0))
     } else {
         let ((evaluation, _), candidate) = candidates
             .iter()
@@ -60,7 +60,7 @@ fn minimax(
                 )
             })
             .min()
-            .unwrap();
+            .unwrap_or(((127, 0), &0));
 
         (-evaluation, *candidate)
     }
