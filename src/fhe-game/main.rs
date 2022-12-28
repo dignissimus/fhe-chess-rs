@@ -12,7 +12,7 @@ use std::collections::{HashMap, VecDeque};
 use std::fs;
 
 use std::sync::{Arc, Mutex};
-const MAX_DEPTH: u8 = 2;
+const MAX_DEPTH: u8 = 3;
 
 fn multiplier(turn: chess::Color) -> i8 {
     match turn {
@@ -43,7 +43,9 @@ fn minimax(
             .iter()
             .map(|candidate| {
                 (
-                    evaluations.get(candidate).map_or(127, |e| e * multiplier(turn)),
+                    evaluations
+                        .get(candidate)
+                        .map_or(127, |e| e * multiplier(turn)),
                     *candidate,
                 )
             })
@@ -53,12 +55,12 @@ fn minimax(
         let ((evaluation, _), candidate) = candidates
             .iter()
             .map(|candidate| (moves.get(candidate), candidate))
-            .filter(|(moveset, candidate)| moveset.is_some())
-            .map(|(moveset, candidate)| {
-                (
-                    minimax(depth - 1, flip(turn), moveset.unwrap(), moves, evaluations),
+            .map(|(moveset, candidate)| match moveset {
+                Some(moveset) => (
+                    minimax(depth - 1, flip(turn), moveset, moves, evaluations),
                     candidate,
-                )
+                ),
+                None => ((-127, 0), candidate),
             })
             .min()
             .unwrap_or(((127, 0), &0));
