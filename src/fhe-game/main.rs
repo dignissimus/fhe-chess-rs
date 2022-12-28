@@ -163,7 +163,7 @@ fn main() {
 
         let zero = server_key.create_trivial(0);
         let style = ProgressBar::new(npositions as u64)
-            .with_style(ProgressStyle::with_template("{wide_bar} {pos}/{len} [{eta}]").unwrap());
+            .with_style(ProgressStyle::with_template("{wide_bar} {pos}/{len} [{eta_precise}]").unwrap());
         let messages = serialised_messages
             .progress_with(style)
             .map(|(identifier, position)| {
