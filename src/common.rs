@@ -134,6 +134,46 @@ pub fn pack_multiply_add(
             server_key.unchecked_add_assign(&mut pack.3, right);
         }
 
+        9 => {
+            server_key.unchecked_add_assign(&mut pack.3, right);
+            server_key.unchecked_add_assign(&mut pack.1, right);
+        }
+
+        10 => {
+            server_key.unchecked_add_assign(&mut pack.3, right);
+            server_key.unchecked_add_assign(&mut pack.1, right);
+        }
+
+        11 => {
+            server_key.unchecked_add_assign(&mut pack.3, right);
+            server_key.unchecked_add_assign(&mut pack.1, right);
+            server_key.unchecked_add_assign(&mut pack.0, right);
+        }
+
+        12 => {
+            server_key.unchecked_add_assign(&mut pack.3, right);
+            server_key.unchecked_add_assign(&mut pack.2, right);
+        }
+
+        13 => {
+            server_key.unchecked_add_assign(&mut pack.3, right);
+            server_key.unchecked_add_assign(&mut pack.2, right);
+            server_key.unchecked_add_assign(&mut pack.0, right);
+        }
+
+        14 => {
+            server_key.unchecked_add_assign(&mut pack.3, right);
+            server_key.unchecked_add_assign(&mut pack.2, right);
+            server_key.unchecked_add_assign(&mut pack.1, right);
+        }
+
+        15 => {
+            server_key.unchecked_add_assign(&mut pack.3, right);
+            server_key.unchecked_add_assign(&mut pack.2, right);
+            server_key.unchecked_add_assign(&mut pack.1, right);
+            server_key.unchecked_add_assign(&mut pack.0, right);
+        }
+
         _ => panic!("Oh no"),
     }
 }
