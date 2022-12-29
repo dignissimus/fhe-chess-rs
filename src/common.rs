@@ -113,6 +113,7 @@ pub fn pack_multiply_add(
         }
         3 => {
             server_key.unchecked_add_assign(&mut pack.1, right);
+            server_key.unchecked_add_assign(&mut pack.0, right);
         }
         4 => {
             server_key.unchecked_add_assign(&mut pack.2, right);
@@ -136,7 +137,7 @@ pub fn pack_multiply_add(
 
         9 => {
             server_key.unchecked_add_assign(&mut pack.3, right);
-            server_key.unchecked_add_assign(&mut pack.1, right);
+            server_key.unchecked_add_assign(&mut pack.0, right);
         }
 
         10 => {
