@@ -18,7 +18,7 @@ On my consumer laptop, the engine can evaluate positions at the beginning of the
 Most of the time is spent encrypting the data, evaluating encrypted positions is quite fast.
 
 # Strength
-The engine plays well. While palying itself at a depth of 4, the engine achieves an average centipawn loss of 32. See example games here: https://lichess.org/study/bMp0VjXe/ooIYTqAS
+The engine plays well. While palying itself at a depth of 4, the engine achieves an average centipawn loss of 32, typical of rapid rapid players with a rating of 1700. See example games here: https://lichess.org/study/bMp0VjXe/ooIYTqAS
 
 # Notes and potential enhancements
 * The model is strongest in the opening and early middle game. Due to its simplistic structure it cannot strategise and when playing against itself it will often opt to draw by repetition. It is for these reasons that contemprary chess engines of this style interpolate between two sets of weights, one set of weights for the beginning of the game and another set of weights for the endgame. For this model, two sets of weights can be computed. One initalised by training a model on positions from the first half of the game and the other trained on positions from the second half of the game. During self-play, the engine can play with a higher temperature to encourage it to play games further into the endgame at the start. To maintain suitability for FHE, Interpolation can be performed using a clipped linear transformation on the number of moves that have be played in the game.
