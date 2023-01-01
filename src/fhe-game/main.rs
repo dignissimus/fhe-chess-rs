@@ -40,7 +40,7 @@ fn minimax(
         // At the base, return the move with the highest ranking for the player to move
         // This returns the relative evaluation for the player
         candidates
-            .iter()
+            .into_par_iter()
             .map(|candidate| {
                 (
                     evaluations
@@ -53,7 +53,7 @@ fn minimax(
             .unwrap_or((-127, 0))
     } else {
         let ((evaluation, _), candidate) = candidates
-            .iter()
+            .into_par_iter()
             .map(|candidate| (moves.get(candidate), candidate))
             .map(|(moveset, candidate)| match moveset {
                 Some(moveset) => (
