@@ -2,7 +2,7 @@ use chess::Board;
 use fhe_chess_rs::common::ChessMessage::*;
 use fhe_chess_rs::common::*;
 use rayon::prelude::*;
-use std::io::{self, BufRead};
+use std::io::{self, BufRead, Write};
 
 use bincode;
 use chess::{ChessMove, Color, MoveGen};
@@ -12,7 +12,6 @@ use std::collections::{HashMap, VecDeque};
 use std::fs;
 
 use std::sync::{Arc, Mutex};
-const MAX_DEPTH: u8 = 3;
 
 fn multiplier(turn: chess::Color) -> i8 {
     match turn {
@@ -72,16 +71,26 @@ fn minimax(
 fn main() {
     // Client code
 
-    println!("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+    println!("Starting position: rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 
+    println!("Loading keys...");
     let client_key = fs::read("client-key.bin").expect("Unable to read client key");
     let client_key: ClientKey = bincode::deserialize(&client_key).unwrap();
 
     let server_key = fs::read("server-key.bin").expect("Unable to read server key");
     let server_key: ServerKey = bincode::deserialize(&server_key).unwrap();
 
+    println!("Loading model weights...");
     let weights = fs::read_to_string("weights.json").unwrap();
     let weights: Vec<i8> = serde_json::from_str(&weights).unwrap();
+
+    println!("START GAME");
+
+    print!("Engine depth: ");
+    std::io::stdout().flush();
+    let max_depth = io::stdin().lock().lines().next().unwrap().unwrap();
+    let max_depth: u8 = max_depth.parse().unwrap();
+    println!();
 
     let mut board = Board::default();
     println!("Please enter a move");
@@ -119,7 +128,7 @@ fn main() {
 
         let mut core_set: HashMap<u64, Board> = HashMap::new();
 
-        for depth in 0..MAX_DEPTH {
+        for depth in 0..max_depth {
             for _ in 0..queue.len() {
                 let phash = queue.pop_front().unwrap();
 
@@ -144,7 +153,7 @@ fn main() {
                     }
 
                     positions.insert(board.get_hash(), board);
-                    if depth == MAX_DEPTH - 1 {
+                    if depth == max_depth - 1 {
                         core_set.insert(board.get_hash(), board);
                     } else {
                         // If we would like to explore this node, then add it to the queue
@@ -219,7 +228,7 @@ fn main() {
         let evaluations = evaluations.lock().unwrap();
         let candidates = moves.get(&root).unwrap();
         let (evaluation, best_move) = minimax(
-            MAX_DEPTH - 1,
+            max_depth - 1,
             Color::Black,
             candidates,
             &moves,
